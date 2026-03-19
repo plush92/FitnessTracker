@@ -1,0 +1,14 @@
+{
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5435,
+            "driver": "PostgreSQL",
+            "name": "fitness_pipeline",
+            "database": "fitness_pipeline",
+            "username": "postgres"
+        }
+    ]
+}
