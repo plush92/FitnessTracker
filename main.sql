@@ -1,0 +1,3 @@
+SELECT *
+FROM meals_raw
+LIMIT 10;

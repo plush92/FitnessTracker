@@ -1,27 +1,123 @@
-CREATE TABLE meals_raw (
-    id SERIAL PRIMARY KEY,
-    meal_date TEXT,
-    food_name TEXT,
-    calories TEXT,
-    protein TEXT,
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE workouts_raw (
-    id SERIAL PRIMARY KEY,
-    workout_date TEXT,
-    exercise TEXT,
-    sets TEXT,
-    reps TEXT,
-    weight TEXT,
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-INSERT INTO meals_raw (meal_date, food_name, calories, protein)
-VALUES ('2026-03-16', 'chicken breast', '250', '40g'),
-    ('03/16/2026', 'protein shake', '160 kcal', '30'),
-    ('March 16 2026', 'eggs', NULL, '18g'),
-    ('2026-03-16', 'bread', '120', NULL);
+INSERT INTO meals_raw (
+        date,
+        food_name,
+        calories,
+        protein,
+        fat,
+        carbs,
+        notes,
+        created_at
+    )
+VALUES (
+        '2026-03-06',
+        'Breakfast',
+        '430',
+        '39',
+        '24',
+        '15',
+        'cup egg whites, 2 eggs, 1 cup veggies, cooked with 1 tbs avocado oil',
+        '2026-03-06 08:00'
+    ),
+    (
+        '2026-03-06',
+        'Protein Shake',
+        '355',
+        '33',
+        '9',
+        '40',
+        'muscle milk strawberry protein, 1 cup sugar free oat milk, 1/2 cup oats, 1/2 cup fruit',
+        '2026-03-06 11:00'
+    ),
+    (
+        '2026-03-06',
+        'Ham Sandwich',
+        '350',
+        '20',
+        '17.5',
+        '30',
+        '4 slices ham, 1 slice baby swiss, mayo, 2 slices Dave''s multigrain bread',
+        '2026-03-06 14:00'
+    ),
+    (
+        '2026-03-06',
+        'Turkey Meatballs',
+        '500',
+        '48',
+        '35',
+        '20',
+        '7 turkey meatballs (half batch of 1lb ground turkey, 2 tbs sugar free oat milk, 1/2 cup breadcrumbs, 1/4 cup parmesan cheese, salt, pepper, onion powder, garlic powder, parsley, 1 egg, 1 tbs avocado oil)',
+        '2026-03-06 17:00'
+    ),
+    (
+        '2026-03-06',
+        'Greek Yogurt',
+        '140',
+        '20',
+        '3',
+        '8',
+        'Chobani cherry greek yogurt, no sugar added',
+        '2026-03-06 20:00'
+    ),
+    (
+        '2026-03-07',
+        'Breakfast',
+        '430',
+        '39',
+        '24',
+        '15',
+        'cup egg whites, 2 eggs, 1 cup veggies, cooked with 1 tbs avocado oil',
+        '2026-03-07 08:00'
+    ),
+    (
+        '2026-03-07',
+        'Protein Shake',
+        '355',
+        '33',
+        '9',
+        '40',
+        'muscle milk strawberry protein, 1 cup sugar free oat milk, 1/2 cup oats, 1/2 cup fruit',
+        '2026-03-07 11:00'
+    ),
+    (
+        '2026-03-07',
+        'Ham Sandwich',
+        '355',
+        '20',
+        '17.5',
+        '30',
+        '4 slices ham, 1 slice baby swiss, mayo, 2 slices Dave''s multigrain bread',
+        '2026-03-07 14:00'
+    ),
+    (
+        '2026-03-07',
+        'Turkey Meatballs',
+        '300',
+        '48',
+        '35',
+        '20',
+        '7 turkey meatballs (half batch of 1lb ground turkey, 2 tbs sugar free oat milk, 1/2 cup breadcrumbs, 1/4 cup parmesan cheese, salt, pepper, onion powder, garlic powder, parsley, 1 egg, 1 tbs avocado oil)',
+        '2026-03-07 17:00'
+    ),
+    (
+        '2026-03-07',
+        'Greek Yogurt',
+        '120',
+        '20',
+        '3',
+        '8',
+        'Chobani cherry greek yogurt, no sugar added',
+        '2026-03-07 20:00'
+    ),
+    (
+        '2026-03-07',
+        'Chicken/Rice/Veggies',
+        '470',
+        '57',
+        '10.5',
+        '32',
+        'Chicken breast, 1/2 cup white rice, 1 cup vegetables, 1tbs avocado oil',
+        '2026-03-07 22:00'
+    );
 INSERT INTO workouts_raw (workout_date, exercise, sets, reps, weight)
 VALUES ('2026-03-16', 'bench press', '3', '10', '135'),
     (
@@ -278,3 +374,37 @@ VALUES -- Monday (Push)
     ('2026-03-22', 'leg press', '3', '10', '270'),
     ('2026-03-22', 'leg curl', '3', '12', 'machine'),
     ('2026-03-22', 'calf raises', '4', '15', NULL);
+CREATE TABLE daily_nutrition AS
+SELECT -- normalize date
+    CASE
+        WHEN meal_date ~ '^\d{4}-\d{2}-\d{2}$' THEN meal_date::DATE
+        WHEN meal_date ~ '^\d{2}/\d{2}/\d{4}$' THEN TO_DATE(meal_date, 'MM/DD/YYYY')
+        ELSE NULL
+    END AS date,
+    -- clean calories
+    CAST(
+        REGEXP_REPLACE(calories, '[^0-9]', '', 'g') AS INT
+    ) AS calories,
+    -- clean protein
+    CAST(
+        REGEXP_REPLACE(protein, '[^0-9]', '', 'g') AS INT
+    ) AS protein
+FROM meals_raw;
+CREATE TABLE daily_workouts AS
+SELECT CASE
+        WHEN workout_date ~ '^\d{4}-\d{2}-\d{2}$' THEN workout_date::DATE
+        WHEN workout_date ~ '^\d{2}/\d{2}/\d{4}$' THEN TO_DATE(workout_date, 'MM/DD/YYYY')
+        ELSE NULL
+    END AS date,
+    exercise,
+    -- handle "three" → NULL for now
+    CAST(
+        NULLIF(REGEXP_REPLACE(sets, '[^0-9]', '', 'g'), '') AS INT
+    ) AS sets,
+    CAST(
+        NULLIF(REGEXP_REPLACE(reps, '[^0-9]', '', 'g'), '') AS INT
+    ) AS reps,
+    CAST(
+        NULLIF(REGEXP_REPLACE(weight, '[^0-9]', '', 'g'), '') AS INT
+    ) AS weight
+FROM workouts_raw;
