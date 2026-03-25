@@ -37,7 +37,7 @@ interface MacrosChartProps {
 const MacrosChart: React.FC<MacrosChartProps> = ({ data, height = 300 }) => {
   return (
     <div className="chart-container">
-      <h2 className="text-lg font-medium mb-4">Macronutrient Breakdown</h2>
+      <h2 style={{ fontSize: '1.125rem', fontWeight: '500', marginBottom: '1rem' }}>Macronutrient Breakdown</h2>
       <ResponsiveContainer width="100%" height={height}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />

@@ -8,14 +8,14 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ title = "Fitness Dashboard", subtitle }) => {
   return (
-    <header className="bg-white shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center">
+    <header className="header">
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-          {subtitle && <p className="text-gray-500 mt-1">{subtitle}</p>}
+          <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>{title}</h1>
+          {subtitle && <p style={{ color: '#6b7280', marginTop: '0.25rem' }}>{subtitle}</p>}
         </div>
         {/* Placeholder for right-side actions like user menu, settings, etc. */}
-        <div className="mt-4 md:mt-0">
+        <div style={{ marginTop: '1rem' }}>
           {/* Example: future buttons or profile avatar */}
         </div>
       </div>

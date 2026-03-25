@@ -11,12 +11,12 @@ interface CardProps {
 const Card: React.FC<CardProps> = ({ title, value, children, className }) => {
   return (
     <div
-      className={`bg-white p-4 rounded-2xl shadow-md flex flex-col justify-between ${className}`}
+      className={`summary-card ${className || ''}`}
     >
-      {title && <div className="text-gray-500 font-medium mb-2">{title}</div>}
+      {title && <div style={{ color: '#6b7280', fontWeight: '500', marginBottom: '0.5rem' }}>{title}</div>}
 
       {value !== undefined ? (
-        <div className="text-2xl font-bold">{value}</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: '700' }}>{value}</div>
       ) : (
         children
       )}

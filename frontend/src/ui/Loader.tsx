@@ -3,19 +3,25 @@ import React from "react";
 
 interface LoaderProps {
   size?: number; // size in pixels
-  className?: string; // extra Tailwind classes
+  className?: string; // extra CSS classes
 }
 
 const Loader: React.FC<LoaderProps> = ({ size = 40, className = "" }) => {
+  const loaderStyle = {
+    width: `${size}px`,
+    height: `${size}px`,
+    border: '4px solid #e5e7eb',
+    borderTop: '4px solid #4f46e5',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite'
+  };
+
   return (
     <div
-      className={`flex justify-center items-center ${className}`}
-      style={{ height: size, width: size }}
+      style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: size, width: size }}
+      className={className}
     >
-      <div
-        className="animate-spin rounded-full border-4 border-t-primary border-gray-200"
-        style={{ height: size, width: size }}
-      ></div>
+      <div style={loaderStyle}></div>
     </div>
   );
 };

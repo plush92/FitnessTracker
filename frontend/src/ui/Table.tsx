@@ -15,8 +15,8 @@ interface TableProps<T> {
 
 function Table<T extends object>({ columns, data, className }: TableProps<T>) {
   return (
-    <div className={`overflow-x-auto ${className}`}>
-      <table className="table w-full">
+    <div className={`table-container ${className || ''}`} style={{ overflowX: 'auto' }}>
+      <table className="table">
         <thead>
           <tr>
             {columns.map((col) => (
@@ -28,7 +28,7 @@ function Table<T extends object>({ columns, data, className }: TableProps<T>) {
         </thead>
         <tbody>
           {data.map((row, i) => (
-            <tr key={i} className="hover:bg-gray-50">
+            <tr key={i}>
               {columns.map((col) => (
                 <td key={String(col.key)} className={col.className}>
                   {row[col.key] as React.ReactNode}

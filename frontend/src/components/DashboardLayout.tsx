@@ -1,11 +1,12 @@
 // src/components/DashboardLayout.tsx
 import React from "react";
-import SummaryCards, { SummaryStats } from "./dashboard/SummaryCards";
-import CaloriesChart, { CaloriesData } from "./dashboard/CaloriesChart";
-import MacrosChart, { MacrosData } from "./dashboard/MacrosChart";
-import DailyTable, { DailyStats } from "./dashboard/DailyTable";
-import MealsTable, { Meal } from "./dashboard/MealsTable";
-import Loader from "./ui/Loader";
+import SummaryCards from "../dashboard/SummaryCards";
+import CaloriesChart from "../dashboard/CaloriesChart";
+import MacrosChart from "../dashboard/MacrosChart";
+import DailyTable from "../dashboard/DailyTable";
+import MealsTable from "../dashboard/MealsTable";
+import Loader from "../ui/Loader";
+import { SummaryStats, CaloriesData, MacrosData, DailyStats, Meal } from "../types/dashboard";
 
 interface DashboardLayoutProps {
   loading?: boolean;
