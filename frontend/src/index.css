@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global body styling */
+body {
+  @apply bg-gray-50 text-gray-900 font-sans;
+}
+
+/* Card styling */
+.card {
+  @apply bg-card p-4 rounded-2xl shadow-md;
+}
+
+/* Summary card */
+.summary-card {
+  @apply bg-white p-4 rounded-xl shadow-md flex flex-col justify-between;
+}
+
+/* Table styling */
+.table {
+  @apply w-full border-collapse bg-white rounded-xl shadow-sm;
+}
+
+.table th {
+  @apply text-left p-3 bg-gray-100 font-medium;
+}
+
+.table td {
+  @apply p-3 border-t border-gray-200;
+}
+
+/* Chart container */
+.chart-container {
+  @apply bg-white p-4 rounded-xl shadow-md;
+}
