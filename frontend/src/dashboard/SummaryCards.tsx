@@ -9,11 +9,11 @@ interface SummaryCardsProps {
 
 const SummaryCards: React.FC<SummaryCardsProps> = ({ data }) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 mb-6">
-      <Card title="Calories Today" value={data.caloriesToday} />
-      <Card title="Avg Calories" value={data.avgCalories} />
-      <Card title="Protein Avg (g)" value={data.proteinAvg} />
-      <Card title="Consistency Score (%)" value={data.consistencyScore} />
+    <div className="summary-cards-grid">
+      <Card title="Calories Today" value={`${data.caloriesToday} kcal`} />
+      <Card title="Avg Calories" value={`${data.avgCalories} kcal`} />
+      <Card title="Protein Avg (g)" value={`${data.proteinAvg} g`} />
+      <Card title="Consistency Score" value={`${data.consistencyScore}%`} />
     </div>
   );
 };

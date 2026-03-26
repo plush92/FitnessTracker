@@ -1,5 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
 import psycopg2
 import os
 from dotenv import load_dotenv
@@ -7,12 +10,34 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# Pydantic models for request/response
+class MealCreate(BaseModel):
+    foodName: str
+    calories: float
+    protein: float = 0
+    carbs: float = 0
+    fat: float = 0
+    mealDate: str  # YYYY-MM-DD format
+    mealTime: str  # HH:MM format
+    mealType: str = "meal"
+    notes: Optional[str] = None
+
+class MealResponse(BaseModel):
+    id: int
+    message: str
+
+class UserGoals(BaseModel):
+    dailyCalories: int
+    dailyProtein: int
+    dailyCarbs: int
+    dailyFat: int
+
 app = FastAPI()
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"],
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://127.0.0.1:3000", "http://127.0.0.1:3001", "http://127.0.0.1:3002"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -31,13 +56,27 @@ def get_db_connection():
 @app.get("/")
 def root():
     return {"message": "Fitness Tracker API", "endpoints": [
-        "/analytics/daily-totals", 
-        "/api/summary", 
-        "/api/calories", 
-        "/api/macros", 
-        "/api/daily-stats", 
-        "/api/meals"
+        "GET /analytics/daily-totals", 
+        "GET /api/summary", 
+        "GET /api/calories", 
+        "GET /api/macros", 
+        "GET /api/daily-stats", 
+        "GET /api/meals",
+        "POST /api/meals",
+        "GET /api/goals"
     ]}
+
+@app.get("/api/goals", response_model=UserGoals)
+def get_user_goals():
+    """Get user's daily nutrition goals"""
+    # For now, return hardcoded goals matching the image
+    # Later this can be made user-configurable
+    return UserGoals(
+        dailyCalories=2500,
+        dailyProtein=150,
+        dailyCarbs=250,
+        dailyFat=83
+    )
 
 @app.get("/api/summary")
 def get_summary():
@@ -51,6 +90,14 @@ def get_summary():
                 WHERE date = CURRENT_DATE
             """)
             calories_today = cur.fetchone()[0]
+            
+            # Get today's protein
+            cur.execute("""
+                SELECT COALESCE(SUM(protein), 0) as protein_today
+                FROM meals_raw 
+                WHERE date = CURRENT_DATE
+            """)
+            protein_today = cur.fetchone()[0]
             
             # Get average calories over last 30 days
             cur.execute("""
@@ -87,6 +134,7 @@ def get_summary():
             
             return {
                 "caloriesToday": int(calories_today),
+                "proteinToday": int(protein_today),
                 "avgCalories": int(avg_calories),
                 "proteinAvg": int(avg_protein),
                 "consistencyScore": int(consistency_score)
@@ -221,4 +269,46 @@ def daily_totals():
                 }
                 for r in rows
             ]
+
+@app.post("/api/meals", response_model=MealResponse)
+def create_meal(meal: MealCreate):
+    """Create a new meal entry"""
+    try:
+        # Parse meal date and time
+        meal_datetime_str = f"{meal.mealDate} {meal.mealTime}"
+        
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                # Insert new meal into meals_raw table
+                cur.execute("""
+                    INSERT INTO meals_raw (
+                        date, food_name, calories, protein, fat, carbs, notes, created_at
+                    ) VALUES (
+                        %s, %s, %s, %s, %s, %s, %s, %s
+                    ) RETURNING id
+                """, (
+                    meal.mealDate,
+                    meal.foodName,
+                    meal.calories,
+                    meal.protein,
+                    meal.fat,
+                    meal.carbs,
+                    meal.notes,
+                    meal_datetime_str
+                ))
+                
+                meal_id = cur.fetchone()[0]
+                conn.commit()
+                
+                return MealResponse(
+                    id=meal_id,
+                    message=f"Meal '{meal.foodName}' added successfully"
+                )
+                
+    except psycopg2.Error as e:
+        raise HTTPException(status_code=400, detail=f"Database error: {str(e)}")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid data format: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
     
