@@ -46,7 +46,14 @@ const App: React.FC = () => {
 
         setSummaryData(summaryJson);
         setCaloriesData(caloriesJson);
-        setMacrosData(macrosJson);
+        // Transform macros single object to array format for chart
+        const macrosArray = [{
+          date: "Current Period", // or use today's date
+          protein: macrosJson.protein || 0,
+          carbs: macrosJson.carbs || 0,
+          fat: macrosJson.fat || 0,
+        }];
+        setMacrosData(macrosArray);
         setDailyStats(dailyJson);
         setMeals(mealsJson);
       } catch (error) {

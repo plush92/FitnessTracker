@@ -13,6 +13,7 @@ export interface CaloriesData {
 }
 
 export interface MacrosData {
+  date: string; // Added date property for chart component
   protein: number;
   carbs: number;
   fat: number;
