@@ -19,6 +19,33 @@ body {
   padding: 0 1rem;
 }
 
+/* Flexbox utilities */
+.flex {
+  display: flex;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.items-center {
+  align-items: center;
+}
+
+/* Spacing utilities */
+.p-6 {
+  padding: 1.5rem;
+}
+
+.space-y-6 > * + * {
+  margin-top: 1.5rem;
+}
+
+/* Sizing utilities */
+.h-screen {
+  height: 100vh;
+}
+
 /* Cards and components */
 .card {
   background: #f3f4f6;

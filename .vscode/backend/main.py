@@ -1,3 +1,4 @@
+# imports
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -45,14 +46,22 @@ app.add_middleware(
 
 # Database connection function
 def get_db_connection():
-    return psycopg2.connect(
-        dbname=os.getenv("DB_NAME", "fitness_pipeline"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASSWORD"),
-        host=os.getenv("DB_HOST", "localhost"),
-        port=os.getenv("DB_PORT", 5435)
+    try: 
+        return psycopg2.connect(
+            dbname=os.getenv("DB_NAME", "fitness_pipeline"),
+            user=os.getenv("DB_USER", "postgres"),
+            password=os.getenv("DB_PASSWORD"),
+            host=os.getenv("DB_HOST", "localhost"),
+            port=os.getenv("DB_PORT", 5435)
     )
+    except psycopg2.Error as e:
+        raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
 
+# get_current_user_id
+def get_current_user_id():
+    return 1
+
+# get root
 @app.get("/")
 def root():
     return {"message": "Fitness Tracker API", "endpoints": [
@@ -66,6 +75,7 @@ def root():
         "GET /api/goals"
     ]}
 
+# get_user_goals
 @app.get("/api/goals", response_model=UserGoals)
 def get_user_goals():
     """Get user's daily nutrition goals"""
@@ -78,6 +88,7 @@ def get_user_goals():
         dailyFat=83
     )
 
+# get_summary
 @app.get("/api/summary")
 def get_summary():
     """Get summary statistics for dashboard cards"""
@@ -87,7 +98,7 @@ def get_summary():
             cur.execute("""
                 SELECT COALESCE(SUM(calories), 0) as calories_today
                 FROM meals_raw 
-                WHERE date = CURRENT_DATE
+                    WHERE date = CURRENT_DATE
             """)
             calories_today = cur.fetchone()[0]
             
@@ -95,7 +106,7 @@ def get_summary():
             cur.execute("""
                 SELECT COALESCE(SUM(protein), 0) as protein_today
                 FROM meals_raw 
-                WHERE date = CURRENT_DATE
+                    WHERE date = CURRENT_DATE
             """)
             protein_today = cur.fetchone()[0]
             
@@ -105,7 +116,7 @@ def get_summary():
                 FROM (
                     SELECT date, SUM(calories) as daily_calories
                     FROM meals_raw 
-                    WHERE date >= CURRENT_DATE - INTERVAL '30 days'
+                        WHERE date >= CURRENT_DATE - INTERVAL '30 days'
                     GROUP BY date
                 ) daily_totals
             """)
@@ -117,7 +128,7 @@ def get_summary():
                 FROM (
                     SELECT date, SUM(protein) as daily_protein
                     FROM meals_raw 
-                    WHERE date >= CURRENT_DATE - INTERVAL '30 days'
+                        WHERE date >= CURRENT_DATE - INTERVAL '30 days'
                     GROUP BY date
                 ) daily_totals
             """)
@@ -127,7 +138,7 @@ def get_summary():
             cur.execute("""
                 SELECT COUNT(DISTINCT date) as days_logged
                 FROM meals_raw 
-                WHERE date >= CURRENT_DATE - INTERVAL '30 days'
+                        WHERE date >= CURRENT_DATE - INTERVAL '30 days'
             """)
             days_logged = cur.fetchone()[0]
             consistency_score = (days_logged / 30.0) * 100
@@ -140,6 +151,7 @@ def get_summary():
                 "consistencyScore": int(consistency_score)
             }
 
+# get calories
 @app.get("/api/calories")
 def get_calories():
     """Get calories data over time for charts"""
@@ -162,6 +174,7 @@ def get_calories():
                 for r in rows
             ]
 
+# get_macros
 @app.get("/api/macros")
 def get_macros():
     """Get macros breakdown for charts"""
@@ -173,7 +186,7 @@ def get_macros():
                     SUM(carbs) as total_carbs,
                     SUM(fat) as total_fat
                 FROM meals_raw
-                WHERE date >= CURRENT_DATE - INTERVAL '7 days'
+                        WHERE date >= CURRENT_DATE - INTERVAL '7 days'
             """)
             row = cur.fetchone()
             
@@ -183,8 +196,10 @@ def get_macros():
                 "fat": int(row[2] or 0)
             }
 
+# get_daily_stats
 @app.get("/api/daily-stats")
 def get_daily_stats():
+    user_id = get_current_user_id()
     """Get daily nutrition stats for table"""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
@@ -196,10 +211,10 @@ def get_daily_stats():
                     SUM(carbs) AS carbs,
                     SUM(fat) AS fat
                 FROM meals_raw
-                WHERE date >= CURRENT_DATE - INTERVAL '14 days'
+                        WHERE user_id = %s and date >= CURRENT_DATE - INTERVAL '14 days'
                 GROUP BY date
                 ORDER BY date DESC
-            """)
+            """, (user_id,))
             rows = cur.fetchall()
 
             return [
@@ -213,6 +228,7 @@ def get_daily_stats():
                 for r in rows
             ]
 
+# get_meals
 @app.get("/api/meals")
 def get_meals():
     """Get individual meals data"""
@@ -223,10 +239,11 @@ def get_meals():
                     id, food_name, calories, protein, carbs, fat, 
                     TO_CHAR(created_at, 'HH24:MI') as time
                 FROM meals_raw
-                WHERE date >= CURRENT_DATE - INTERVAL '7 days'
+                  WHERE date >= CURRENT_DATE - INTERVAL '7 days'
                 ORDER BY created_at DESC
                 LIMIT 20
             """)
+
             rows = cur.fetchall()
 
             return [
@@ -242,6 +259,7 @@ def get_meals():
                 for r in rows
             ]
 
+# get daily_totals
 @app.get("/analytics/daily-totals")
 def daily_totals():
     with get_db_connection() as conn:
@@ -270,6 +288,7 @@ def daily_totals():
                 for r in rows
             ]
 
+# create_meal
 @app.post("/api/meals", response_model=MealResponse)
 def create_meal(meal: MealCreate):
     """Create a new meal entry"""
